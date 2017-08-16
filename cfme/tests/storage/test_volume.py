@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import fauxfactory
 import pytest
 from widgetastic.exceptions import NoSuchElementException
 
@@ -6,9 +7,11 @@ from cfme import test_requirements
 from cfme.cloud.provider import CloudProvider
 from cfme.cloud.provider.openstack import OpenStackProvider
 from cfme.storage.volume import Volume
+from cfme.web_ui import flash
 
 from utils import testgen
 from utils.appliance.implementations.ui import navigate_to
+from utils.wait import wait_for
 
 
 pytest_generate_tests = testgen.generate([CloudProvider])
@@ -36,3 +39,11 @@ def test_volume_navigation(openstack_provider):
 
     view = navigate_to(Volume, 'Add')
     assert view.is_displayed
+
+
+def test_create_volume(openstack_provider):
+    volume = Volume(fauxfactory.gen_alpha(), provider=openstack_provider)
+    volume.create(1, openstack_provider.get_yaml_data()['tenant'])
+    flash.assert_success()
+    wait_for(openstack_provider.is_refreshed, timeout=600)
+    assert volume.exists()

@@ -10,7 +10,7 @@ from cfme.base.ui import BaseLoggedInPage
 from cfme.exceptions import VolumeNotFound
 from cfme.web_ui import match_location
 from utils.appliance import Navigatable
-from utils.appliance.implementations.ui import CFMENavigateStep, navigator
+from utils.appliance.implementations.ui import CFMENavigateStep, navigator, navigate_to
 from utils.log import logger
 
 
@@ -134,6 +134,17 @@ class Volume(Navigatable):
         # the storage providers have different names then cloud providers
         # https://bugzilla.redhat.com/show_bug.cgi?id=1455270
         self.provider = provider
+
+    def create(self, size, tenant):
+        view = navigate_to(self, 'Add')
+        params = dict(volume_name=self.name, size=size, tenant=tenant)
+        view.form.fill(params)
+        view.form.add.click()
+
+    def exists(self):
+        view = navigate_to(Volume, 'All')
+        volumes = [volume.name for volume in view.entities.table]
+        return self.name in volumes
 
 
 @navigator.register(Volume, 'All')
